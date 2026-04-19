@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Classroom Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F7F5F0;
+    --surface: #FFFFFF;
+    --surface2: #F0EDE7;
+    --border: rgba(0,0,0,0.08);
+    --border2: rgba(0,0,0,0.14);
+    --text: #1A1814;
+    --text2: #6B6760;
+    --text3: #9E9B96;
+    --purple: #4A3F9F;
+    --purple-light: #EAE8F7;
+    --purple-mid: #7B72CC;
+    --green: #1A7A52;
+    --green-light: #E3F2EC;
+    --green-mid: #3DAA78;
+    --orange: #C44A1A;
+    --orange-light: #FAEEE8;
+    --orange-mid: #E8713A;
+    --accent: #4A3F9F;
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ─── SETUP SCREEN ─── */
+  #setup-screen {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1.5rem;
+    gap: 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #setup-screen::before {
+    content: '';
+    position: absolute;
+    top: -120px; right: -120px;
+    width: 400px; height: 400px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(74,63,159,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  #setup-screen::after {
+    content: '';
+    position: absolute;
+    bottom: -80px; left: -80px;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(26,122,82,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .setup-wordmark {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 3.5rem;
+    opacity: 0;
+    animation: fadeUp 0.5s ease forwards;
+  }
+
+  .wordmark-icon {
+    width: 36px; height: 36px;
+    background: var(--purple);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .wordmark-icon svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2; }
+
+  .wordmark-text {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    color: var(--text);
+    letter-spacing: -0.02em;
+  }
+
+  .setup-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 520px;
+    box-shadow: 0 2px 24px rgba(0,0,0,0.06);
+    opacity: 0;
+    animation: fadeUp 0.5s 0.1s ease forwards;
+  }
+
+  .setup-heading {
+    font-family: 'DM Serif Display', serif;
+    font-size: 30px;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .setup-sub {
+    font-size: 14px;
+    color: var(--text3);
+    margin-bottom: 2rem;
+    line-height: 1.5;
+  }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .field-row.full { grid-template-columns: 1fr; }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .field label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text2);
+  }
+
+  .field select,
+  .field input[type="text"] {
+    width: 100%;
+    padding: 11px 14px;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    border: 1.5px solid var(--border2);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    color: var(--text);
+    transition: border-color 0.15s, box-shadow 0.15s;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  .field select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236B6760' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+    cursor: pointer;
+  }
+
+  .field select:focus,
+  .field input:focus {
+    outline: none;
+    border-color: var(--purple);
+    box-shadow: 0 0 0 3px rgba(74,63,159,0.1);
+  }
+
+  .gen-btn {
+    width: 100%;
+    padding: 14px;
+    margin-top: 1.25rem;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--purple);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: transform 0.12s, opacity 0.15s, box-shadow 0.15s;
+    letter-spacing: -0.01em;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .gen-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0);
+    transition: background 0.15s;
+  }
+
+  .gen-btn:not(:disabled):hover {
+    box-shadow: 0 4px 20px rgba(74,63,159,0.35);
+    transform: translateY(-1px);
+  }
+
+  .gen-btn:not(:disabled):active {
+    transform: translateY(0);
+  }
+
+  .gen-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  /* ─── BOARD SCREEN ─── */
+  #board-screen {
+    display: none;
+    min-height: 100vh;
+    flex-direction: column;
+    background: var(--bg);
+  }
+
+  .board-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 2rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    gap: 1rem;
+  }
+
+  .topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .topbar-wordmark {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .topbar-wordmark .wi {
+    width: 28px; height: 28px;
+    background: var(--purple);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .topbar-wordmark .wi svg { width: 13px; height: 13px; fill: none; stroke: #fff; stroke-width: 2; }
+
+  .topbar-wordmark span {
+    font-family: 'DM Serif Display', serif;
+    font-size: 17px;
+    letter-spacing: -0.02em;
+  }
+
+  .topbar-divider {
+    width: 1px; height: 20px;
+    background: var(--border2);
+  }
+
+  .info-chip {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: var(--purple-light);
+    color: var(--purple);
+  }
+
+  .info-chip.topic {
+    background: var(--green-light);
+    color: var(--green);
+  }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .outline-btn {
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    padding: 7px 14px;
+    border: 1.5px solid var(--border2);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text2);
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s;
+    white-space: nowrap;
+  }
+
+  .outline-btn:hover { background: var(--surface2); border-color: var(--border2); }
+
+  .outline-btn.primary {
+    border-color: var(--purple);
+    color: var(--purple);
+    background: var(--purple-light);
+  }
+
+  .outline-btn.primary:hover { background: #d8d3f2; }
+
+  /* ─── LOADING ─── */
+  .loading-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    flex: 1;
+    padding: 4rem;
+    min-height: 60vh;
+  }
+
+  .loader-ring {
+    width: 40px; height: 40px;
+    border: 3px solid var(--border2);
+    border-top-color: var(--purple);
+    border-radius: 50%;
+    animation: spin 0.75s linear infinite;
+  }
+
+  .loading-label {
+    font-size: 15px;
+    color: var(--text3);
+    font-style: italic;
+  }
+
+  .loading-sub {
+    font-size: 13px;
+    color: var(--text3);
+    margin-top: -8px;
+  }
+
+  /* ─── BOARD CONTENT ─── */
+  .board-content {
+    padding: 1.75rem 2rem 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    max-width: 1280px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .board-row {
+    display: grid;
+    gap: 1.25rem;
+  }
+
+  .board-row.cols-3 { grid-template-columns: 1.35fr 1fr 1fr; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    animation: fadeUp 0.4s ease forwards;
+    opacity: 0;
+  }
+
+  .card:nth-child(1) { animation-delay: 0.05s; }
+  .card:nth-child(2) { animation-delay: 0.12s; }
+  .card:nth-child(3) { animation-delay: 0.19s; }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 0.875rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .card-icon {
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .card-icon.purple { background: var(--purple-light); }
+  .card-icon.green  { background: var(--green-light); }
+  .card-icon.orange { background: var(--orange-light); }
+
+  .card-icon svg { width: 15px; height: 15px; }
+
+  .card-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .card-label.purple { color: var(--purple); }
+  .card-label.green  { color: var(--green); }
+  .card-label.orange { color: var(--orange); }
+
+  /* ─── PRACTICE QUESTIONS ─── */
+  .question-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .question-item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .q-badge {
+    width: 26px; height: 26px;
+    background: var(--purple-light);
+    color: var(--purple);
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .q-text {
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.6;
+    flex: 1;
+  }
+
+  .q-tag {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 10px;
+    margin-left: 6px;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  .q-tag.recall    { background: #EAE8F7; color: #4A3F9F; }
+  .q-tag.apply     { background: #E3F2EC; color: #1A7A52; }
+  .q-tag.think     { background: #FEF3E7; color: #9A5800; }
+
+  /* ─── DISCUSSION ─── */
+  .discussion-body {
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.7;
+    padding: 1rem 1.25rem;
+    background: var(--green-light);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--green-mid);
+    font-style: italic;
+  }
+
+  .writing-hint {
+    font-size: 12px;
+    color: var(--text3);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .writing-hint::before {
+    content: '';
+    display: inline-block;
+    width: 14px; height: 14px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M2 12l1.5-4L11 1l2 2-7.5 7.5L2 12z' stroke='%239E9B96' stroke-width='1.2'/%3E%3C/svg%3E");
+    background-size: contain;
+    background-repeat: no-repeat;
+    flex-shrink: 0;
+  }
+
+  /* ─── EXIT TICKET ─── */
+  .exit-body {
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.65;
+    padding: 1rem 1.25rem;
+    background: var(--orange-light);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--orange-mid);
+  }
+
+  .timer-section {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .timer-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .timer-lbl {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text3);
+  }
+
+  .timer-presets {
+    display: flex;
+    gap: 4px;
+  }
+
+  .preset-btn {
+    font-size: 11px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    padding: 3px 8px;
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--text2);
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+
+  .preset-btn:hover, .preset-btn.active-preset {
+    background: var(--orange-light);
+    border-color: var(--orange-mid);
+    color: var(--orange);
+  }
+
+  .timer-face {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .timer-digits {
+    font-family: 'DM Serif Display', serif;
+    font-size: 42px;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    line-height: 1;
+    min-width: 100px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .timer-digits.ticking { color: var(--orange); }
+  .timer-digits.done    { color: var(--green); }
+
+  .timer-btns {
+    display: flex;
+    gap: 6px;
+    margin-left: auto;
+    align-items: center;
+  }
+
+  .t-ctrl {
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border2);
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s, transform 0.08s;
+  }
+
+  .t-ctrl:hover { background: var(--surface2); }
+  .t-ctrl:active { transform: scale(0.97); }
+
+  .t-ctrl.go {
+    background: var(--orange);
+    color: #fff;
+    border-color: transparent;
+  }
+
+  .t-ctrl.go:hover { opacity: 0.88; }
+
+  .timer-bar-wrap {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .timer-bar {
+    height: 100%;
+    background: var(--orange);
+    border-radius: 2px;
+    transition: width 0.5s linear, background 0.5s;
+    width: 100%;
+  }
+
+  /* ─── NOTEBOOK FOOTER ─── */
+  .notebook-bar {
+    text-align: center;
+    padding: 1rem;
+    font-size: 12px;
+    color: var(--text3);
+    letter-spacing: 0.04em;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  /* ─── ERROR ─── */
+  .error-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 3rem;
+    text-align: center;
+    color: var(--text2);
+    font-size: 15px;
+    min-height: 60vh;
+    justify-content: center;
+  }
+
+  .error-icon {
+    font-size: 32px;
+    margin-bottom: 4px;
+  }
+
+  .retry-btn {
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--orange-mid);
+    background: var(--orange-light);
+    color: var(--orange);
+    cursor: pointer;
+    transition: opacity 0.12s;
+  }
+
+  .retry-btn:hover { opacity: 0.8; }
+
+  /* ─── PRINT ─── */
+  @media print {
+    .board-topbar { display: none; }
+    .notebook-bar { display: none; }
+    body { background: #fff; }
+    .card { box-shadow: none; border: 1px solid #ddd; break-inside: avoid; }
+  }
+
+  /* ─── ANIMATIONS ─── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 860px) {
+    .board-row.cols-3 { grid-template-columns: 1fr; }
+    .board-content { padding: 1.25rem 1rem; }
+    .board-topbar { padding: 0.875rem 1rem; }
+  }
+
+  @media (max-width: 480px) {
+    .field-row { grid-template-columns: 1fr; }
+    .setup-card { padding: 1.75rem 1.25rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ SETUP SCREEN ══════════════ -->
+<div id="setup-screen">
+  <div class="setup-wordmark">
+    <div class="wordmark-icon">
+      <svg viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="2" width="14" height="14" rx="2" stroke-width="1.8"/>
+        <line x1="5" y1="6" x2="13" y2="6" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="5" y1="9" x2="13" y2="9" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="5" y1="12" x2="9" y2="12" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <span class="wordmark-text">Classroom Board</span>
+  </div>
+
+  <div class="setup-card">
+    <h1 class="setup-heading">Set up today's<br><em>practice board</em></h1>
+    <p class="setup-sub">Choose your class and we'll generate fresh questions for the smart board.</p>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="grade-sel">Grade</label>
+        <select id="grade-sel">
+          <option value="">Select grade</option>
+          <option value="6">6th grade</option>
+          <option value="7">7th grade</option>
+          <option value="8">8th grade</option>
+          <option value="9">9th grade</option>
+          <option value="10">10th grade</option>
+          <option value="11">11th grade</option>
+          <option value="12">12th grade</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="subject-sel">Subject</label>
+        <select id="subject-sel">
+          <option value="">Select subject</option>
+          <option value="Math">Math</option>
+          <option value="English / ELA">English / ELA</option>
+          <option value="Science">Science</option>
+          <option value="History / Social Studies">History / Social Studies</option>
+          <option value="Geography">Geography</option>
+          <option value="Health">Health</option>
+          <option value="Art">Art</option>
+          <option value="Physical Education">Physical Education</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field-row full">
+      <div class="field">
+        <label for="topic-inp">Today's topic <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)">(optional)</span></label>
+        <input type="text" id="topic-inp" placeholder="e.g. fractions, photosynthesis, the Civil War…">
+      </div>
+    </div>
+
+    <button class="gen-btn" id="gen-btn" disabled>Generate today's board →</button>
+  </div>
+</div>
+
+<!-- ══════════════ BOARD SCREEN ══════════════ -->
+<div id="board-screen">
+  <div class="board-topbar">
+    <div class="topbar-left">
+      <div class="topbar-wordmark">
+        <div class="wi">
+          <svg viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+            <rect x="2" y="2" width="14" height="14" rx="2" stroke-width="1.8"/>
+            <line x1="5" y1="6" x2="13" y2="6" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="5" y1="9" x2="13" y2="9" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="5" y1="12" x2="9" y2="12" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span>Classroom Board</span>
+      </div>
+      <div class="topbar-divider"></div>
+      <span class="info-chip" id="chip-gs"></span>
+      <span class="info-chip topic" id="chip-topic" style="display:none"></span>
+    </div>
+    <div class="topbar-right">
+      <button class="outline-btn primary" id="regen-btn">↻ New questions</button>
+      <button class="outline-btn" id="back-btn">Change class</button>
+      <button class="outline-btn" onclick="window.print()">Print</button>
+    </div>
+  </div>
+
+  <div id="board-inner"></div>
+
+  <div class="notebook-bar">✏ Students: write your answers in your notebook</div>
+</div>
+
+<script>
+  const gradeEl   = document.getElementById('grade-sel');
+  const subjectEl = document.getElementById('subject-sel');
+  const topicEl   = document.getElementById('topic-inp');
+  const genBtn    = document.getElementById('gen-btn');
+  const setup     = document.getElementById('setup-screen');
+  const boardScr  = document.getElementById('board-screen');
+  const boardInner= document.getElementById('board-inner');
+  const chipGS    = document.getElementById('chip-gs');
+  const chipTopic = document.getElementById('chip-topic');
+  const backBtn   = document.getElementById('back-btn');
+  const regenBtn  = document.getElementById('regen-btn');
+
+  // ── timer state
+  let timerSec = 300, timerMax = 300;
+  let timerRunning = false, timerIv = null;
+
+  function checkReady() {
+    genBtn.disabled = !(gradeEl.value && subjectEl.value);
+  }
+  gradeEl.addEventListener('change', checkReady);
+  subjectEl.addEventListener('change', checkReady);
+
+  function fmt(s) {
+    return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+  }
+
+  // ── Anthropic API call
+  async function callAPI(grade, subject, topic) {
+    const topicStr = topic ? `The specific topic for today is: "${topic}".` : '';
+    const prompt = `You are generating classroom content for a ${grade}th grade ${subject} class displayed on a smart board. ${topicStr}
+
+Return ONLY valid JSON — no markdown fences, no preamble.
+
+Format:
+{
+  "practice": [
+    {"q": "question text", "type": "recall"},
+    {"q": "question text", "type": "apply"},
+    {"q": "question text", "type": "think"}
+  ],
+  "discussion": "discussion or writing prompt text",
+  "exit": "exit ticket question text"
+}
+
+Rules:
+- practice[0]: type must be "recall" — a straightforward knowledge check
+- practice[1]: type must be "apply" — applying a concept to a scenario  
+- practice[2]: type must be "think" — higher-order thinking, analysis, or opinion
+- discussion: 1-2 sentences, engaging and open-ended, sparks conversation or creative writing for ${grade}th graders
+- exit: one focused question checking understanding of the main concept, quick to answer
+- All content must be appropriate and challenging for ${grade}th grade ${subject}
+- Do not include numbers or bullet characters in the question text itself`;
+
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1000,
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+
+    const data = await res.json();
+    const raw = data.content.map(b => b.text || '').join('');
+    const clean = raw.replace(/```json|```/g, '').trim();
+    return JSON.parse(clean);
+  }
+
+  // ── Render board
+  function renderBoard(d) {
+    // Stop any running timer
+    clearInterval(timerIv);
+    timerRunning = false;
+    timerSec = 300; timerMax = 300;
+
+    boardInner.innerHTML = `
+      <div class="board-content">
+        <div class="board-row cols-3">
+
+          <!-- PRACTICE QUESTIONS -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-icon purple">
+                <svg viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M7.5 1L9.18 5.27L13.5 5.27L10.16 7.73L11.84 12L7.5 9.18L3.16 12L4.84 7.73L1.5 5.27L5.82 5.27z" stroke="#4A3F9F" stroke-width="1.4" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <span class="card-label purple">Practice Questions</span>
+            </div>
+            <div class="question-list">
+              ${d.practice.map((q, i) => `
+                <div class="question-item">
+                  <span class="q-badge">${i+1}</span>
+                  <span class="q-text">${q.q}<span class="q-tag ${q.type === 'recall' ? 'recall' : q.type === 'apply' ? 'apply' : 'think'}">${q.type === 'recall' ? 'Recall' : q.type === 'apply' ? 'Apply' : 'Think'}</span></span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- DISCUSSION PROMPT -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-icon green">
+                <svg viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M2 2h11v9H8l-3 2.5V11H2z" stroke="#1A7A52" stroke-width="1.4" stroke-linejoin="round"/>
+                  <line x1="5" y1="5.5" x2="10" y2="5.5" stroke="#1A7A52" stroke-width="1.2" stroke-linecap="round"/>
+                  <line x1="5" y1="7.5" x2="8" y2="7.5" stroke="#1A7A52" stroke-width="1.2" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <span class="card-label green">Discussion / Writing Prompt</span>
+            </div>
+            <div class="discussion-body">${d.discussion}</div>
+            <p class="writing-hint">Write at least 3–5 sentences in your notebook</p>
+          </div>
+
+          <!-- EXIT TICKET -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-icon orange">
+                <svg viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="1.5" y="3" width="12" height="9" rx="1.5" stroke="#C44A1A" stroke-width="1.4"/>
+                  <line x1="5" y1="3" x2="5" y2="12" stroke="#C44A1A" stroke-width="1.2"/>
+                  <line x1="1.5" y1="7.5" x2="5" y2="7.5" stroke="#C44A1A" stroke-width="1.2"/>
+                </svg>
+              </div>
+              <span class="card-label orange">Exit Ticket</span>
+            </div>
+            <div class="exit-body">${d.exit}</div>
+            <div class="timer-section">
+              <div class="timer-label-row">
+                <span class="timer-lbl">Timer</span>
+                <div class="timer-presets">
+                  <button class="preset-btn active-preset" data-sec="300">5 min</button>
+                  <button class="preset-btn" data-sec="180">3 min</button>
+                  <button class="preset-btn" data-sec="60">1 min</button>
+                </div>
+              </div>
+              <div class="timer-face">
+                <span class="timer-digits" id="timer-disp">05:00</span>
+                <div class="timer-btns">
+                  <button class="t-ctrl go" id="t-start">Start</button>
+                  <button class="t-ctrl" id="t-reset">Reset</button>
+                </div>
+              </div>
+              <div class="timer-bar-wrap">
+                <div class="timer-bar" id="timer-bar"></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>`;
+
+    // Wire up timer
+    const disp = document.getElementById('timer-disp');
+    const bar  = document.getElementById('timer-bar');
+    const startBtn = document.getElementById('t-start');
+    const resetBtn = document.getElementById('t-reset');
+
+    function updateDisplay() {
+      disp.textContent = fmt(timerSec);
+      bar.style.width = `${(timerSec / timerMax) * 100}%`;
+      if (timerSec <= 30) bar.style.background = '#C44A1A';
+      else bar.style.background = 'var(--orange)';
+      if (timerRunning) {
+        disp.className = 'timer-digits ticking';
+      } else if (timerSec === 0) {
+        disp.className = 'timer-digits done';
+        disp.textContent = 'Done!';
+      } else {
+        disp.className = 'timer-digits';
+      }
+    }
+
+    startBtn.addEventListener('click', () => {
+      if (!timerRunning) {
+        if (timerSec === 0) { timerSec = timerMax; }
+        timerRunning = true;
+        startBtn.textContent = 'Pause';
+        startBtn.classList.remove('go');
+        startBtn.style.background = 'var(--text2)';
+        timerIv = setInterval(() => {
+          timerSec--;
+          updateDisplay();
+          if (timerSec <= 0) {
+            clearInterval(timerIv);
+            timerRunning = false;
+            startBtn.textContent = 'Start';
+            startBtn.style.background = '';
+            startBtn.classList.add('go');
+            updateDisplay();
+          }
+        }, 1000);
+      } else {
+        clearInterval(timerIv);
+        timerRunning = false;
+        startBtn.textContent = 'Start';
+        startBtn.style.background = '';
+        startBtn.classList.add('go');
+        updateDisplay();
+      }
+    });
+
+    resetBtn.addEventListener('click', () => {
+      clearInterval(timerIv);
+      timerRunning = false;
+      timerSec = timerMax;
+      startBtn.textContent = 'Start';
+      startBtn.style.background = '';
+      startBtn.classList.add('go');
+      updateDisplay();
+    });
+
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        clearInterval(timerIv);
+        timerRunning = false;
+        timerMax = parseInt(btn.dataset.sec);
+        timerSec = timerMax;
+        startBtn.textContent = 'Start';
+        startBtn.style.background = '';
+        startBtn.classList.add('go');
+        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active-preset'));
+        btn.classList.add('active-preset');
+        updateDisplay();
+      });
+    });
+
+    updateDisplay();
+  }
+
+  // ── Show loading
+  function showLoading() {
+    boardInner.innerHTML = `
+      <div class="loading-wrap">
+        <div class="loader-ring"></div>
+        <p class="loading-label">Generating questions…</p>
+        <p class="loading-sub">Making it just right for your class</p>
+      </div>`;
+  }
+
+  // ── Show error
+  function showError(retryFn) {
+    boardInner.innerHTML = `
+      <div class="error-box">
+        <div class="error-icon">⚠</div>
+        <p>Something went wrong while generating questions.</p>
+        <p style="font-size:13px;color:var(--text3)">Check your connection and try again.</p>
+        <button class="retry-btn" id="retry-btn">Try again</button>
+      </div>`;
+    document.getElementById('retry-btn').addEventListener('click', retryFn);
+  }
+
+  // ── Main generate function
+  async function generate() {
+    const grade   = gradeEl.value;
+    const subject = subjectEl.value;
+    const topic   = topicEl.value.trim();
+
+    setup.style.display = 'none';
+    boardScr.style.display = 'flex';
+    boardScr.style.flexDirection = 'column';
+
+    chipGS.textContent = `Grade ${grade} · ${subject}`;
+    if (topic) { chipTopic.textContent = topic; chipTopic.style.display = ''; }
+    else { chipTopic.style.display = 'none'; }
+
+    showLoading();
+
+    try {
+      const data = await callAPI(grade, subject, topic);
+      renderBoard(data);
+    } catch(e) {
+      console.error(e);
+      showError(generate);
+    }
+  }
+
+  genBtn.addEventListener('click', generate);
+  regenBtn.addEventListener('click', generate);
+
+  backBtn.addEventListener('click', () => {
+    clearInterval(timerIv);
+    timerRunning = false;
+    boardScr.style.display = 'none';
+    setup.style.display = 'flex';
+  });
+</script>
+</body>
+</html>
