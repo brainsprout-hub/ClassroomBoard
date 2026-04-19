@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Classroom Board</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%234A3F9F'/><rect x='7' y='9' width='18' height='2.5' rx='1.25' fill='white'/><rect x='7' y='14.75' width='18' height='2.5' rx='1.25' fill='white'/><rect x='7' y='20.5' width='11' height='2.5' rx='1.25' fill='white'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
@@ -319,6 +320,127 @@
   }
 
   .outline-btn.primary:hover { background: #d8d3f2; }
+
+  .outline-btn.answer-btn {
+    border-color: var(--green);
+    color: var(--green);
+    background: var(--green-light);
+  }
+  .outline-btn.answer-btn:hover { background: #c5e8d8; }
+  .outline-btn.answer-btn.active {
+    background: var(--green);
+    color: #fff;
+    border-color: var(--green);
+  }
+
+  .answer-panel {
+    display: none;
+    background: var(--surface);
+    border-top: 2px solid var(--green);
+    padding: 1.75rem 2rem;
+    max-width: 1280px;
+    margin: 0 auto;
+    width: 100%;
+    animation: fadeUp 0.3s ease forwards;
+  }
+
+  .answer-panel.visible { display: block; }
+
+  .answer-panel-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    color: var(--text);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .answer-panel-title::before {
+    content: '';
+    display: inline-block;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--green);
+    flex-shrink: 0;
+  }
+
+  .answer-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+  }
+
+  .answer-section {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+  }
+
+  .answer-section.wide { grid-column: 1 / -1; }
+
+  .answer-section-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--green);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .answer-item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .answer-num {
+    width: 24px; height: 24px;
+    background: var(--green-light);
+    color: var(--green);
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .answer-text {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  .answer-hint {
+    font-size: 12px;
+    color: var(--text3);
+    font-style: italic;
+    margin-top: 2px;
+  }
+
+  .answer-box {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.65;
+    padding: 0.875rem 1rem;
+    background: var(--green-light);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--green-mid);
+  }
+
+  @media (max-width: 860px) {
+    .answer-grid { grid-template-columns: 1fr; }
+    .answer-panel { padding: 1.25rem 1rem; }
+  }
 
   /* ─── LOADING ─── */
   .loading-wrap {
@@ -774,6 +896,7 @@
       <span class="info-chip topic" id="chip-topic" style="display:none"></span>
     </div>
     <div class="topbar-right">
+      <button class="outline-btn answer-btn" id="answer-btn">Show answers</button>
       <button class="outline-btn primary" id="regen-btn">↻ New questions</button>
       <button class="outline-btn" id="back-btn">Change class</button>
       <button class="outline-btn" onclick="window.print()">Print</button>
@@ -781,6 +904,8 @@
   </div>
 
   <div id="board-inner"></div>
+
+  <div id="answer-panel" class="answer-panel"></div>
 
   <div class="notebook-bar">✏ Students: write your answers in your notebook</div>
 </div>
@@ -797,6 +922,9 @@
   const chipTopic = document.getElementById('chip-topic');
   const backBtn   = document.getElementById('back-btn');
   const regenBtn  = document.getElementById('regen-btn');
+  const answerBtn  = document.getElementById('answer-btn');
+  const answerPanel = document.getElementById('answer-panel');
+  let currentAnswers = null;
 
   // ── timer state
   let timerSec = 300, timerMax = 300;
@@ -822,12 +950,14 @@ Return ONLY valid JSON — no markdown fences, no preamble.
 Format:
 {
   "practice": [
-    {"q": "question text", "type": "recall"},
-    {"q": "question text", "type": "apply"},
-    {"q": "question text", "type": "think"}
+    {"q": "question text", "type": "recall", "answer": "answer text"},
+    {"q": "question text", "type": "apply", "answer": "answer text"},
+    {"q": "question text", "type": "think", "answer": "sample answer or key points"}
   ],
   "discussion": "discussion or writing prompt text",
-  "exit": "exit ticket question text"
+  "discussion_points": ["talking point 1", "talking point 2", "talking point 3"],
+  "exit": "exit ticket question text",
+  "exit_answer": "ideal exit ticket answer"
 }
 
 Rules:
@@ -837,7 +967,10 @@ Rules:
 - discussion: 1-2 sentences, engaging and open-ended, sparks conversation or creative writing for ${grade}th graders
 - exit: one focused question checking understanding of the main concept, quick to answer
 - All content must be appropriate and challenging for ${grade}th grade ${subject}
-- Do not include numbers or bullet characters in the question text itself`;
+- Do not include numbers or bullet characters in the question text itself
+- For each practice question, provide a clear concise answer in the "answers" array
+- For the discussion, provide 2-3 example talking points teachers can use
+- For the exit ticket, provide the ideal answer`;
 
     const res = await fetch("/.netlify/functions/claude", {
       method: "POST",
@@ -866,6 +999,12 @@ Rules:
 
   // ── Render board
   function renderBoard(d) {
+    // Save data for answer panel
+    currentAnswers = d;
+    answerBtn.style.display = '';
+    answerPanel.classList.remove('visible');
+    answerBtn.classList.remove('active');
+    answerBtn.textContent = 'Show answers';
     // Stop any running timer
     clearInterval(timerIv);
     timerRunning = false;
@@ -1051,6 +1190,7 @@ Rules:
 
   // ── Main generate function
   async function generate() {
+    answerBtn.style.display = 'none';
     const grade   = gradeEl.value;
     const subject = subjectEl.value;
     const topic   = topicEl.value.trim();
@@ -1082,7 +1222,76 @@ Rules:
     timerRunning = false;
     boardScr.style.display = 'none';
     setup.style.display = 'flex';
+    answerPanel.classList.remove('visible');
+    answerBtn.classList.remove('active');
+    answerBtn.textContent = 'Show answers';
+    currentAnswers = null;
   });
+
+  answerBtn.addEventListener('click', () => {
+    const showing = answerPanel.classList.contains('visible');
+    if (showing) {
+      answerPanel.classList.remove('visible');
+      answerBtn.classList.remove('active');
+      answerBtn.textContent = 'Show answers';
+    } else {
+      renderAnswers(currentAnswers);
+      answerPanel.classList.add('visible');
+      answerBtn.classList.add('active');
+      answerBtn.textContent = 'Hide answers';
+      answerPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+
+  function renderAnswers(d) {
+    const discussionPoints = d.discussion_points
+      ? d.discussion_points.map(p => `<li style="font-size:14px;color:var(--text);line-height:1.6;margin-bottom:6px;">${p}</li>`).join('')
+      : '<li style="font-size:14px;color:var(--text3);">Encourage students to share their own perspectives.</li>';
+
+    answerPanel.innerHTML = `
+      <div style="max-width:1280px;margin:0 auto;">
+        <p class="answer-panel-title">Answer key</p>
+        <div class="answer-grid">
+
+          <div class="answer-section wide">
+            <div class="answer-section-label">
+              <span style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;"></span>
+              Practice question answers
+            </div>
+            ${d.practice.map((q, i) => `
+              <div class="answer-item">
+                <span class="answer-num">${i+1}</span>
+                <div>
+                  <div class="answer-text" style="color:var(--text2);font-size:13px;margin-bottom:3px;">${q.q}</div>
+                  <div class="answer-text"><strong style="font-weight:500;">Answer:</strong> ${q.answer || 'See teacher notes'}</div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+
+          <div class="answer-section">
+            <div class="answer-section-label">
+              <span style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;"></span>
+              Discussion talking points
+            </div>
+            <div class="answer-text" style="color:var(--text2);font-size:13px;margin-bottom:8px;font-style:italic;">${d.discussion}</div>
+            <ul style="padding-left:1.25rem;margin:0;">
+              ${discussionPoints}
+            </ul>
+          </div>
+
+          <div class="answer-section">
+            <div class="answer-section-label">
+              <span style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;"></span>
+              Exit ticket answer
+            </div>
+            <div class="answer-text" style="color:var(--text2);font-size:13px;margin-bottom:8px;font-style:italic;">${d.exit}</div>
+            <div class="answer-box">${d.exit_answer || 'Students should demonstrate understanding of the main concept covered today.'}</div>
+          </div>
+
+        </div>
+      </div>`;
+  }
 </script>
 </body>
 </html>
